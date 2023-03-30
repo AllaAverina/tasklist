@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  app:
+    build: ./
+    container_name: php-apache
+    volumes:
+      - ./:/var/www
+      - ./config/apache.conf:/etc/apache2/sites-available/000-default.conf
+    ports:
+      - 8000:80
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./dump.sql:/docker-entrypoint-initdb.d/tasklist_db.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tasklist_db
+      MYSQL_USER: tasklist_user
+      MYSQL_PASSWORD: tasklist_pass
+      TZ: Europe/Moscow
+    ports:
+      - 3306:3306
+    healthcheck:
+        test: mysql -h mysql -P 3306 -uroot -proot
+        interval: 5s
+        retries: 60
